@@ -5,7 +5,7 @@ struct Profile {
     let description: String
 }
 
-struct LabPhoto: Identifiable {
+struct LabPhoto: Identifiable, Sendable {
     let id: Int
     let title: String
     let symbol: String

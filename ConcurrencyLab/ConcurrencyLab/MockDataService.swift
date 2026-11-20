@@ -14,12 +14,29 @@ struct MockDataService {
     }
 
     func fetchPhotos() async throws -> [LabPhoto] {
-        try await Task.sleep(nanoseconds: 1_500_000_000)
-        return [
-            LabPhoto(id: 1, title: "Montañas", symbol: "mountain.2.fill"),
-            LabPhoto(id: 2, title: "Atardecer", symbol: "sunset.fill"),
-            LabPhoto(id: 3, title: "Naturaleza", symbol: "leaf.fill")
+        let requests: [(photo: LabPhoto, delay: UInt64)] = [
+            (LabPhoto(id: 1, title: "Montañas", symbol: "mountain.2.fill"), 1_500_000_000),
+            (LabPhoto(id: 2, title: "Atardecer", symbol: "sunset.fill"), 500_000_000),
+            (LabPhoto(id: 3, title: "Naturaleza", symbol: "leaf.fill"), 1_000_000_000)
         ]
+
+        return try await withThrowingTaskGroup(
+            of: LabPhoto.self,
+            returning: [LabPhoto].self
+        ) { group in
+            for request in requests {
+                group.addTask {
+                    try await Task.sleep(nanoseconds: request.delay)
+                    return request.photo
+                }
+            }
+
+            var completedPhotos: [LabPhoto] = []
+            for try await photo in group {
+                completedPhotos.append(photo)
+            }
+            return completedPhotos
+        }
     }
 
     func fetchRecommendations() async throws -> [Recommendation] {

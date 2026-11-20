@@ -44,7 +44,7 @@ struct ContentView: View {
 
                         ResourceStatusCard(
                             title: "Fotografías",
-                            subtitle: "Galería personal",
+                            subtitle: "TaskGroup: se muestran al terminar",
                             systemImage: "photo.on.rectangle.angled",
                             state: viewModel.photosState,
                             detail: viewModel.photos.map(\.title).joined(separator: " · ").nilIfEmpty,
@@ -69,7 +69,7 @@ struct ContentView: View {
                         .font(.headline)
                         .padding(.top, 4)
 
-                    Label("async let · cargas simultáneas con datos simulados", systemImage: "checkmark.circle.fill")
+                    Label("async let y TaskGroup · concurrencia estructurada", systemImage: "checkmark.circle.fill")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
