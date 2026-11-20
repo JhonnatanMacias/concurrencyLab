@@ -24,6 +24,13 @@ struct ContentView: View {
                     }
                     .buttonStyle(.borderedProminent)
 
+                    Label(
+                        "Cargas exitosas: \(viewModel.successfulLoadsCount)",
+                        systemImage: "checkmark.circle"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
                     Button("Simular error al cargar el perfil") {
                         viewModel.startProfileLoad(simulateError: true)
                     }

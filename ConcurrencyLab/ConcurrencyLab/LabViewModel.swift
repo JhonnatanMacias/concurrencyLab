@@ -9,8 +9,10 @@ final class LabViewModel: ObservableObject {
     @Published private(set) var profile: Profile?
     @Published private(set) var photos: [LabPhoto] = []
     @Published private(set) var recommendations: [Recommendation] = []
+    @Published private(set) var successfulLoadsCount = 0
 
     private let dataService = MockDataService()
+    private let loadCounter = LoadCounter()
     private var profileTask: Task<Void, Never>?
     private var photosTask: Task<Void, Never>?
     private var recommendationsTask: Task<Void, Never>?
@@ -63,6 +65,7 @@ final class LabViewModel: ObservableObject {
         do {
             profile = try await dataService.fetchProfile(simulateError: simulateError)
             profileState = .loaded
+            await recordSuccessfulLoad()
         } catch is CancellationError {
             profileState = .cancelled
         } catch {
@@ -75,6 +78,7 @@ final class LabViewModel: ObservableObject {
         do {
             photos = try await dataService.fetchPhotos()
             photosState = .loaded
+            await recordSuccessfulLoad()
         } catch is CancellationError {
             photosState = .cancelled
         } catch {
@@ -82,11 +86,17 @@ final class LabViewModel: ObservableObject {
         }
     }
 
+    private func recordSuccessfulLoad() async {
+        let total = await loadCounter.recordSuccessfulLoad()
+        successfulLoadsCount = max(successfulLoadsCount, total)
+    }
+
     private func loadRecommendations() async {
         recommendationsState = .loading
         do {
             recommendations = try await dataService.fetchRecommendations()
             recommendationsState = .loaded
+            await recordSuccessfulLoad()
         } catch is CancellationError {
             recommendationsState = .cancelled
         } catch {
