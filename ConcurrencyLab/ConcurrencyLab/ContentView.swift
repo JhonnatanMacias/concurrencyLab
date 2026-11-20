@@ -10,12 +10,24 @@ struct ContentView: View {
                     introduction
 
                     Button {
-                        Task { await viewModel.loadAll() }
+                        if viewModel.isLoading {
+                            viewModel.cancelAllLoads()
+                        } else {
+                            viewModel.startLoadAll()
+                        }
                     } label: {
-                        Label("Cargar todo en paralelo", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
-                            .frame(maxWidth: .infinity)
+                        Label(
+                            viewModel.isLoading ? "Cancelar cargas" : "Cargar todo en paralelo",
+                            systemImage: viewModel.isLoading ? "xmark.circle" : "arrow.clockwise"
+                        )
+                        .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+
+                    Button("Simular error al cargar el perfil") {
+                        viewModel.startProfileLoad(simulateError: true)
+                    }
+                    .font(.subheadline)
                     .disabled(viewModel.isLoading)
 
                     VStack(spacing: 12) {
@@ -26,7 +38,8 @@ struct ContentView: View {
                             state: viewModel.profileState,
                             detail: viewModel.profile.map { "\($0.name) · \($0.description)" },
                             actionTitle: "Cargar perfil",
-                            action: { Task { await viewModel.loadProfile() } }
+                            action: { viewModel.startProfileLoad() },
+                            cancelAction: { viewModel.cancelAllLoads() }
                         )
 
                         ResourceStatusCard(
@@ -36,7 +49,8 @@ struct ContentView: View {
                             state: viewModel.photosState,
                             detail: viewModel.photos.map(\.title).joined(separator: " · ").nilIfEmpty,
                             actionTitle: "Cargar fotografías",
-                            action: { Task { await viewModel.loadPhotos() } }
+                            action: { viewModel.startPhotosLoad() },
+                            cancelAction: { viewModel.cancelAllLoads() }
                         )
 
                         ResourceStatusCard(
@@ -46,7 +60,8 @@ struct ContentView: View {
                             state: viewModel.recommendationsState,
                             detail: viewModel.recommendations.first?.title,
                             actionTitle: "Cargar recomendaciones",
-                            action: { Task { await viewModel.loadRecommendations() } }
+                            action: { viewModel.startRecommendationsLoad() },
+                            cancelAction: { viewModel.cancelAllLoads() }
                         )
                     }
 
@@ -88,6 +103,7 @@ private struct ResourceStatusCard: View {
     let detail: String?
     let actionTitle: String
     let action: () -> Void
+    let cancelAction: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -125,9 +141,14 @@ private struct ResourceStatusCard: View {
                     .foregroundStyle(.secondary)
             }
 
-            Button(actionTitle, action: action)
-                .buttonStyle(.bordered)
-                .disabled(state.isLoading)
+            Button(state.isLoading ? "Cancelar carga" : actionTitle) {
+                if state.isLoading {
+                    cancelAction()
+                } else {
+                    action()
+                }
+            }
+            .buttonStyle(.bordered)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)

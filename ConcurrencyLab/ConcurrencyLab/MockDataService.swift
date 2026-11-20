@@ -1,8 +1,15 @@
 import Foundation
 
+enum MockDataServiceError: Error {
+    case simulatedFailure
+}
+
 struct MockDataService {
-    func fetchProfile() async throws -> Profile {
+    func fetchProfile(simulateError: Bool = false) async throws -> Profile {
         try await Task.sleep(nanoseconds: 1_000_000_000)
+        if simulateError {
+            throw MockDataServiceError.simulatedFailure
+        }
         return Profile(name: "Ada Lovelace", description: "Exploradora de Swift Concurrency")
     }
 
